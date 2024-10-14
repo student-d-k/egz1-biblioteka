@@ -1,0 +1,70 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table author {
+  id str [primary key]
+}
+
+Table genre {
+  id integer [primary key]
+  name varchar
+}
+
+Table book {
+  book_id in [primary key]
+  author_id integer
+  caption varchar
+  year_of_release integer
+  genre_id integer
+}
+
+Table role {
+  id integer [primary key]
+  name varchar
+}
+
+Table user {
+  id integer [primary key]
+  role_id integer
+}
+
+Table booking_record_type {
+  id integer [primary key] // borrow / return
+}
+
+Table booking_record {
+  id integer [primary key]
+  booking_record_type_id integer
+  book_id integer
+  record_date date
+}
+
+table users {
+  user_id int
+}
+
+table books {
+  book_id int
+}
+
+table booking_records {
+  booking_record_id int
+}
+
+Ref: "books"."book_id" < "booking_record"."book_id"
+
+Ref: "booking_record_type"."id" < "booking_record"."booking_record_type_id"
+
+Ref: "booking_records"."booking_record_id" < "booking_record"."id"
+
+Ref: "books"."book_id" < "book"."book_id"
+
+Ref: "author"."id" < "book"."author_id"
+
+Ref: "genre"."id" < "book"."genre_id"
+
+Ref: "role"."id" < "user"."role_id"
+
+Ref: "user"."id" < "users"."user_id"
+
+Ref: "users"."user_id" < "booking_record"."id"
