@@ -228,7 +228,7 @@ def handle_main():
 
                     st.write(f'Total: {len(filter_books)} book(s) deleted')
 
-            # librarian functionality - list users
+            # librarian functionality - statistika
 
             if st.session_state.current_role.can_delete_book(): # reikia kitokio metodo
 
