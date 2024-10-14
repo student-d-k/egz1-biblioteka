@@ -234,10 +234,7 @@ def handle_main():
 
                 if st.button('Statistics'):
 
-                    
-                    for user in library.users:
-                        st.write(f'id: {user}, role: {library.users[user][0]}, password: {library.users[user][1]}')
-                        # st.write(library.users[user])
+                    st.write('not implemented')
 
             # librarian functionality - list users
 
