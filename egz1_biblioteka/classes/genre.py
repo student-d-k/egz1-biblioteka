@@ -51,7 +51,7 @@ class Children(Genre):
 class Detective(Genre):
 
     def __str__(self) -> str:
-        return('Detektyvai')
+        return('Detektyvas')
 
     def __repr__(self) -> str:
         return('D')
