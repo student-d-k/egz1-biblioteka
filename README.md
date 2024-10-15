@@ -1,1 +1,1 @@
-to run: streamlit run ..\egz1-biblioteka\main.py
+to run: streamlit run .\egz1_biblioteka\main.py
