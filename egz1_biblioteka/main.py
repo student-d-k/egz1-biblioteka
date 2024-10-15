@@ -8,7 +8,7 @@ from statistics import mode
 import pickle
 
 from egz1_biblioteka.classes.library import *
-from egz1_biblioteka.data.def_library import *
+from egz1_biblioteka.data.create_predefined_library import *
 
 if 'current_user' not in st.session_state:
     st.session_state.current_user = None
@@ -22,8 +22,7 @@ if 'add_new_book_pressed' not in st.session_state:
 if 'any_changes_to_library' not in st.session_state:
     st.session_state.any_changes_to_library = False
 
-if 'library' not in st.session_state:
-    st.session_state.library = None
+my1_library = None
 
 
 # bandom nuskaityti biblioteka
@@ -35,11 +34,10 @@ LIBRARY_FULL_FILE_NAME = os.path.join(Path(__file__).resolve().parent, LIBRARY_F
 
 try:
 
-    if st.session_state.library is None:
+    if my1_library is None:
 
         with open(LIBRARY_FULL_FILE_NAME, 'rb') as f:
-            st.session_state.library = pickle.load(f)
-            st.session_state.any_changes_to_library = True
+            my1_library = pickle.load(f)
 
         print('Biblioteka nuskaityta.')
 
@@ -48,8 +46,8 @@ except IOError as e:
 
 finally:
 
-    if st.session_state.library is None:
-        st.session_state.library = create_default_library()
+    if my1_library is None:
+        my1_library = create_default_library()
         st.session_state.any_changes_to_library = True
         print('Skurta nauja biblioteka.')
 
@@ -74,13 +72,13 @@ def handle_login():
         password = st.text_input('Password', type='password')
     with c3:
         if st.button('Login'):
-            user = next((user for user in st.session_state.library.users if user.id.lower() == user_name), None)
+            user = next((user for user in my1_library.users if user.id.lower() == user_name), None)
             if user is None:
                 st.write('unknown user')
             else:
-                if st.session_state.library.users[user][1] == password:
+                if my1_library.users[user][1] == password:
                     st.session_state.current_user = user
-                    st.session_state.current_role = st.session_state.library.users[user][0]
+                    st.session_state.current_role = my1_library.users[user][0]
                     st.success(f'login successful as {st.session_state.current_role}')
                     st.rerun()
                 else:
@@ -93,7 +91,7 @@ def handle_new_book():
 
     book_title = st.text_input('Book title')
 
-    book_genre_str = st.radio('Select a genre', library.genres, format_func=str)
+    book_genre_str = st.radio('Select a genre', my1_library.genres, format_func=str)
 
     year_of_release = st.number_input('Year of release', min_value=1900, max_value=2050, value=2024, step=1, format='%d')
 
@@ -123,7 +121,7 @@ def handle_new_book():
                 book_genre = None
 
         new_book = Book(Author(author_name), book_title, year_of_release, book_genre)
-        s =  add_book_to_library(st.session_state.library, new_book)
+        s =  add_book_to_library(my1_library, new_book)
         if s == '':
             st.success('New book added to library')
             st.session_state.any_changes_to_library = True
@@ -146,7 +144,7 @@ def handle_stat():
 
     # check past booking history
 
-    for br in st.session_state.library.booking_records_history:
+    for br in my1_library.booking_records_history:
 
         if (br.returned_on - br.created_on).days > BOOK_BORROW_MAX_DAYS:
             if br.user_id in d1:
@@ -163,7 +161,7 @@ def handle_stat():
 
     # check current booking records
 
-    for br in st.session_state.library.booking_records:
+    for br in my1_library.booking_records:
 
         if (datetime.datetime.now() - br.created_on).days > BOOK_BORROW_MAX_DAYS:
             if br.user_id in d1:
@@ -180,7 +178,7 @@ def handle_stat():
 
     d4 = {} # zanru kiekis bibliotekoje
 
-    for book in library.books:
+    for book in my1_library.books:
 
         if str(book.genre) in d4:
             d4[str(book.genre)] += 1
@@ -259,7 +257,7 @@ def handle_main():
 
                 my_bookings = [e.book for e in \
                         filter(lambda br: br.user_id == st.session_state.current_user.id, \
-                        st.session_state.library.booking_records)]
+                        my1_library.booking_records)]
                 
                 if len(my_bookings) == 0:
                     st.warning('You have no bookings')
@@ -273,12 +271,12 @@ def handle_main():
 
                 my_bookings = [e.book for e in \
                         filter(lambda br: br.user_id == st.session_state.current_user.id, \
-                        st.session_state.library.booking_records)]
+                        my1_library.booking_records)]
 
                 if len(my_bookings) == 0:
                     st.warning('You have no books to return')
                 else:
-                    s = borrow_book_from_library(st.session_state.library, st.session_state.current_user.id, my_bookings[0], True)
+                    s = borrow_book_from_library(my1_library, st.session_state.current_user.id, my_bookings[0], True)
                     if s != '':
                         st.warning(s)
                     else:
@@ -292,20 +290,20 @@ def handle_main():
                 delayed_books = [e.book for e in \
                         filter(lambda br: br.user_id == st.session_state.current_user.id and \
                                             (datetime.datetime.now() - br.created_on).days > BOOK_BORROW_MAX_DAYS, \
-                        st.session_state.library.booking_records)]
+                        my1_library.booking_records)]
                 if len(delayed_books) > 0:
                     st.warning('Jūs turite laiku negrąžintų knygų.')
                 else:
                     if st.button('Make booking filtered books'):
 
-                        filter_books = get_books_by_filter(st.session_state.library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
+                        filter_books = get_books_by_filter(my1_library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
 
                         if len(filter_books) > 1:
                             st.warning(f'You can borrow only 1 book at a time')
                         elif len(filter_books) == 0:
                             st.warning(f'No books in list')
                         else:
-                            s = borrow_book_from_library(st.session_state.library, st.session_state.current_user.id, filter_books[0], False)
+                            s = borrow_book_from_library(my1_library, st.session_state.current_user.id, filter_books[0], False)
                             if s != '':
                                 st.warning(s)
                             else:
@@ -314,10 +312,10 @@ def handle_main():
 
         # isvedam atfiltruotu knygu sarasa
 
-        filter_books = get_books_by_filter(st.session_state.library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
+        filter_books = get_books_by_filter(my1_library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
 
         for book in filter_books:
-            # st.write(f'{book} [balance: {library.books[book][0]}]')
+            # st.write(f'{book} [balance: {my1_library.books[book][0]}]')
             st.write(book)
 
         st.write(f'Total: {len(filter_books)} book(s)')
@@ -330,6 +328,7 @@ def handle_main():
 
             if st.button('Add new book', key='add_new_book_1'):
                 st.session_state.add_new_book_pressed = True
+                st.rerun()
 
         # librarian functionality - delete book
 
@@ -337,10 +336,10 @@ def handle_main():
 
             if st.button('Delete filtered books', key='delete_filtered_books_1'):
 
-                filter_books = get_books_by_filter(st.session_state.library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
+                filter_books = get_books_by_filter(my1_library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
 
                 for book in filter_books:
-                    s = delete_book_from_library(st.session_state.library, book)
+                    s = delete_book_from_library(my1_library, book)
                     if s != '':
                         st.warning(s)
                     else:
@@ -362,9 +361,9 @@ def handle_main():
         if st.session_state.current_role.can_delete_book(): # reikia kitokio metodo
 
             if st.button('List users'):
-                for user in st.session_state.library.users:
-                    st.write(f'id: {user}, role: {st.session_state.library.users[user][0]}, password: {st.session_state.library.users[user][1]}')
-                    # st.write(st.session_state.library.users[user])
+                for user in my1_library.users:
+                    st.write(f'id: {user}, role: {my1_library.users[user][0]}, password: {my1_library.users[user][1]}')
+                    # st.write(my1_library.users[user])
 
 
 if st.session_state.current_user is None:
@@ -397,7 +396,7 @@ if st.session_state.any_changes_to_library:
     try:
 
         with open(LIBRARY_FULL_FILE_NAME, 'wb') as f:
-            pickle.dump(st.session_state.library, f)
+            pickle.dump(my1_library, f)
 
         st.session_state.any_changes_to_library = False
         print('Biblioteka išsaugota.')

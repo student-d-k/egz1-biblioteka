@@ -9,7 +9,7 @@ from egz1_biblioteka.classes.booking_record import *
 BOOK_BORROW_MAX_DAYS = 7 # kiek laiko galima laikyti knyga
 
 
-class Library:
+class My1Library:
 
     def __init__(self) -> None:
         self.users = {}
@@ -21,7 +21,7 @@ class Library:
 
 # 1 prideti knyga i biblioteka
 
-def add_book_to_library(library: Library, book: Book) -> str:
+def add_book_to_library(library: My1Library, book: Book) -> str:
     'return error or empty string'
 
     try:
@@ -40,7 +40,7 @@ def add_book_to_library(library: Library, book: Book) -> str:
 
 # 2 pasalinti knyga is bibliotekos
 
-def delete_book_from_library(library: Library, book: Book) -> str:
+def delete_book_from_library(library: My1Library, book: Book) -> str:
     'return error or empty string'
 
     try:
@@ -66,7 +66,7 @@ def delete_book_from_library(library: Library, book: Book) -> str:
 
 # help function
 
-def book_count_in_library(library: Library, book: Book) -> int:
+def book_count_in_library(library: My1Library, book: Book) -> int:
     'kiek knygos egzemplioriu liko bibliotekoje'
 
     booked_books = [e.book for e in filter(lambda br: br.book == book, library.booking_records)]
@@ -75,7 +75,7 @@ def book_count_in_library(library: Library, book: Book) -> int:
 
 # 3 pasiimti / grazinti knyga issinesimui
 
-def borrow_book_from_library(library: Library, user_id: User, book: Book, action_return: bool) -> str:
+def borrow_book_from_library(library: My1Library, user_id: User, book: Book, action_return: bool) -> str:
     '''
     action_return = True - norim grazinti
     action_return = False - norim pasiskolinti
@@ -124,7 +124,7 @@ def borrow_book_from_library(library: Library, user_id: User, book: Book, action
 # 4, 5, 6, 7 ieskoti knygu pagal pavadinima arba autoriu arba pagal velavima
 
 def get_books_by_filter( 
-    library: Library,
+    library: My1Library,
     search_str: str = '*',
     year_from: int = 1900,
     year_to: int = 2050,

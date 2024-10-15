@@ -1,9 +1,9 @@
 
 from egz1_biblioteka.classes.library import *
 
-def create_default_library() -> Library:
+def create_default_library() -> My1Library:
 
-    new_library = Library()
+    new_library = My1Library()
 
     # add boooks
 
