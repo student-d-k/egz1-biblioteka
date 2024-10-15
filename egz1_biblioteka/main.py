@@ -214,91 +214,101 @@ def handle_main():
 
     # list library books based on filter
 
-    # col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([3, 1])
 
-    # with col1:
+    with col1:
 
-    # customer functionality
+        # customer functionality
 
-    c1, c2, c3, c4 = st.columns(4)
+        c1, c2, c3 = st.columns(3)
 
-    # paieskos kriterijai
+        # paieskos kriterijai
 
-    with c1:
+        with c1:
 
-        year_from = st.number_input('Year from', min_value=1900, max_value=2050, value=1900, step=1, format='%d')
-        year_to = st.number_input('Year to', min_value=1900, max_value=2050, value=2050, step=1, format='%d')
-        search_str = st.text_input('Search', value='*').lower()
+            year_from = st.number_input('Year from', min_value=1900, max_value=2050, value=1900, step=1, format='%d')
+            year_to = st.number_input('Year to', min_value=1900, max_value=2050, value=2050, step=1, format='%d')
+            search_str = st.text_input('Search', value='*').lower()
 
-    with c2:
+        with c2:
 
-        flag_overdued = st.checkbox('Overdued')
-        flag_available = st.checkbox('Available')
-        flag_booked = st.checkbox('Booked')
-    
-    with c3:
+            flag_overdued = st.checkbox('Overdued')
+            flag_available = st.checkbox('Available')
+            flag_booked = st.checkbox('Booked')
+        
+        with c3:
 
-        if st.button('Refresh'):
-            pass
+            if st.button('Refresh'):
+                pass
 
-        # mano pasiimtos knygos funkcionalumas
+            # mano pasiimtos knygos funkcionalumas
 
-        if st.button('My bookings'):
+            if st.button('My bookings'):
 
-            my_bookings = [e.book for e in \
-                    filter(lambda br: br.user_id == st.session_state.current_user.id, \
-                    library.booking_records)]
-            
-            if len(my_bookings) == 0:
-                st.warning('You have no bookings')
-            else:
-                for e in my_bookings:
-                    st.write(e)
-
-        # grazinti knygas funkcionalumas
-
-        if  st.button('Return books back'):
-
-            my_bookings = [e.book for e in \
-                    filter(lambda br: br.user_id == st.session_state.current_user.id, \
-                    library.booking_records)]
-
-            if len(my_bookings) == 0:
-                st.warning('You have no books to return')
-            else:
-                s = borrow_book_from_library(library, st.session_state.current_user.id, my_bookings[0], True)
-                if s != '':
-                    st.warning(s)
+                my_bookings = [e.book for e in \
+                        filter(lambda br: br.user_id == st.session_state.current_user.id, \
+                        library.booking_records)]
+                
+                if len(my_bookings) == 0:
+                    st.warning('You have no bookings')
                 else:
-                    st.success(f'Book {my_bookings[0]} returned')
+                    for e in my_bookings:
+                        st.write(e)
 
-        # pasiskolinti knyga funkcionalumas
+            # grazinti knygas funkcionalumas
 
-        if st.session_state.current_role.can_borrow_book():
+            if  st.button('Return books back'):
 
-            delayed_books = [e.book for e in \
-                    filter(lambda br: br.user_id == st.session_state.current_user.id and \
-                                        (datetime.datetime.now() - br.created_on).days > BOOK_BORROW_MAX_DAYS, \
-                    library.booking_records)]
-            if len(delayed_books) > 0:
-                st.warning('Jūs turite laiku negrąžintų knygų.')
-            else:
-                if st.button('Make booking filtered books'):
+                my_bookings = [e.book for e in \
+                        filter(lambda br: br.user_id == st.session_state.current_user.id, \
+                        library.booking_records)]
 
-                    filter_books = get_books_by_filter(library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
-
-                    if len(filter_books) > 1:
-                        st.warning(f'You can borrow only 1 book at a time')
-                    elif len(filter_books) == 0:
-                        st.warning(f'No books in list')
+                if len(my_bookings) == 0:
+                    st.warning('You have no books to return')
+                else:
+                    s = borrow_book_from_library(library, st.session_state.current_user.id, my_bookings[0], True)
+                    if s != '':
+                        st.warning(s)
                     else:
-                        s = borrow_book_from_library(library, st.session_state.current_user.id, filter_books[0], False)
-                        if s != '':
-                            st.warning(s)
-                        else:
-                            st.success(f'Book {filter_books[0]} borrowed')
+                        st.success(f'Book {my_bookings[0]} returned')
 
-    with c4:
+            # pasiskolinti knyga funkcionalumas
+
+            if st.session_state.current_role.can_borrow_book():
+
+                delayed_books = [e.book for e in \
+                        filter(lambda br: br.user_id == st.session_state.current_user.id and \
+                                            (datetime.datetime.now() - br.created_on).days > BOOK_BORROW_MAX_DAYS, \
+                        library.booking_records)]
+                if len(delayed_books) > 0:
+                    st.warning('Jūs turite laiku negrąžintų knygų.')
+                else:
+                    if st.button('Make booking filtered books'):
+
+                        filter_books = get_books_by_filter(library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
+
+                        if len(filter_books) > 1:
+                            st.warning(f'You can borrow only 1 book at a time')
+                        elif len(filter_books) == 0:
+                            st.warning(f'No books in list')
+                        else:
+                            s = borrow_book_from_library(library, st.session_state.current_user.id, filter_books[0], False)
+                            if s != '':
+                                st.warning(s)
+                            else:
+                                st.success(f'Book {filter_books[0]} borrowed')
+
+        # isvedam atfiltruotu knygu sarasa
+
+        filter_books = get_books_by_filter(library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
+
+        for book in filter_books:
+            # st.write(f'{book} [balance: {library.books[book][0]}]')
+            st.write(book)
+
+        st.write(f'Total: {len(filter_books)} book(s)')
+
+    with col2:
 
         # librarian functionality - add book
 
@@ -340,16 +350,6 @@ def handle_main():
                 for user in library.users:
                     st.write(f'id: {user}, role: {library.users[user][0]}, password: {library.users[user][1]}')
                     # st.write(library.users[user])
-
-    # isvedam atfiltruotu knygu sarasa
-
-    filter_books = get_books_by_filter(library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
-
-    for book in filter_books:
-        # st.write(f'{book} [balance: {library.books[book][0]}]')
-        st.write(book)
-
-    st.write(f'Total: {len(filter_books)} book(s)')
 
 
 if st.session_state.current_user is None:
