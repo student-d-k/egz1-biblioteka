@@ -5,9 +5,10 @@ import streamlit as st
 from pathlib import Path
 import statistics
 from statistics import mode
+import pickle
 
-from classes.library import *
-from data.def_library import *
+from egz1_biblioteka.classes.library import *
+from egz1_biblioteka.data.def_library import *
 
 if 'current_user' not in st.session_state:
     st.session_state.current_user = None

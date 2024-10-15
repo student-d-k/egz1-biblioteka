@@ -1,8 +1,8 @@
 
 import datetime
 
-from classes.book import *
-from classes.users import *
+from egz1_biblioteka.classes.book import *
+from egz1_biblioteka.classes.users import *
 
 class BookingRecordType:
     ...

@@ -1,5 +1,5 @@
 
-from classes.library import *
+from egz1_biblioteka.classes.library import *
 
 def create_default_library() -> Library:
 
