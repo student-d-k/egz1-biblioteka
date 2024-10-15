@@ -9,7 +9,21 @@ from statistics import mode
 from classes.library import *
 from data.def_library import *
 
-library = None
+if 'current_user' not in st.session_state:
+    st.session_state.current_user = None
+
+if 'current_role' not in st.session_state:
+    st.session_state.current_role = None
+
+if 'add_new_book_pressed' not in st.session_state:
+    st.session_state.add_new_book_pressed = False
+
+if 'any_changes_to_library' not in st.session_state:
+    st.session_state.any_changes_to_library = False
+
+if 'library' not in st.session_state:
+    st.session_state.library = None
+
 
 # bandom nuskaityti biblioteka
 # jeigu nepavyksta - sukuriam pre-defined
@@ -20,19 +34,22 @@ LIBRARY_FULL_FILE_NAME = os.path.join(Path(__file__).resolve().parent, LIBRARY_F
 
 try:
 
-    with open(LIBRARY_FULL_FILE_NAME, 'rb') as f:
-        library = pickle.load(f)
+    if st.session_state.library is None:
+
+        with open(LIBRARY_FULL_FILE_NAME, 'rb') as f:
+            st.session_state.library = pickle.load(f)
+            st.session_state.any_changes_to_library = True
+
+        print('Biblioteka nuskaityta.')
 
 except IOError as e:
     print(e)
 
-else:
-    print('Biblioteka nuskaityta.')
-
 finally:
 
-    if library is None:
-        library = create_default_library()
+    if st.session_state.library is None:
+        st.session_state.library = create_default_library()
+        st.session_state.any_changes_to_library = True
         print('Skurta nauja biblioteka.')
 
 
@@ -46,15 +63,6 @@ def validate_text_input(input_text):
 
 st.title('Library Management System')
 
-if 'current_user' not in st.session_state:
-    st.session_state.current_user = None
-
-if 'current_role' not in st.session_state:
-    st.session_state.current_role = None
-
-if 'add_new_book_pressed' not in st.session_state:
-    st.session_state.add_new_book_pressed = False
-
 
 def handle_login():
 
@@ -65,14 +73,15 @@ def handle_login():
         password = st.text_input('Password', type='password')
     with c3:
         if st.button('Login'):
-            user = next((user for user in library.users if user.id.lower() == user_name), None)
+            user = next((user for user in st.session_state.library.users if user.id.lower() == user_name), None)
             if user is None:
                 st.write('unknown user')
             else:
-                if library.users[user][1] == password:
+                if st.session_state.library.users[user][1] == password:
                     st.session_state.current_user = user
-                    st.session_state.current_role = library.users[user][0]
+                    st.session_state.current_role = st.session_state.library.users[user][0]
                     st.success(f'login successful as {st.session_state.current_role}')
+                    st.rerun()
                 else:
                     st.write('incorrect password')
 
@@ -113,15 +122,17 @@ def handle_new_book():
                 book_genre = None
 
         new_book = Book(Author(author_name), book_title, year_of_release, book_genre)
-        add_book_to_library(library, new_book)
-
-        # st.write(book_genre_str)
-        # st.write(book_genre)
-        st.success('New book added to library')
+        s =  add_book_to_library(st.session_state.library, new_book)
+        if s == '':
+            st.success('New book added to library')
+            st.session_state.any_changes_to_library = True
+        else:
+            st.warning(s)
 
     if st.button('Back', key='back_2'):
 
         st.session_state.add_new_book_pressed = False
+        st.rerun()
 
 
 def handle_stat():
@@ -134,7 +145,7 @@ def handle_stat():
 
     # check past booking history
 
-    for br in library.booking_records_history:
+    for br in st.session_state.library.booking_records_history:
 
         if (br.returned_on - br.created_on).days > BOOK_BORROW_MAX_DAYS:
             if br.user_id in d1:
@@ -151,7 +162,7 @@ def handle_stat():
 
     # check current booking records
 
-    for br in library.booking_records:
+    for br in st.session_state.library.booking_records:
 
         if (datetime.datetime.now() - br.created_on).days > BOOK_BORROW_MAX_DAYS:
             if br.user_id in d1:
@@ -247,7 +258,7 @@ def handle_main():
 
                 my_bookings = [e.book for e in \
                         filter(lambda br: br.user_id == st.session_state.current_user.id, \
-                        library.booking_records)]
+                        st.session_state.library.booking_records)]
                 
                 if len(my_bookings) == 0:
                     st.warning('You have no bookings')
@@ -261,15 +272,16 @@ def handle_main():
 
                 my_bookings = [e.book for e in \
                         filter(lambda br: br.user_id == st.session_state.current_user.id, \
-                        library.booking_records)]
+                        st.session_state.library.booking_records)]
 
                 if len(my_bookings) == 0:
                     st.warning('You have no books to return')
                 else:
-                    s = borrow_book_from_library(library, st.session_state.current_user.id, my_bookings[0], True)
+                    s = borrow_book_from_library(st.session_state.library, st.session_state.current_user.id, my_bookings[0], True)
                     if s != '':
                         st.warning(s)
                     else:
+                        st.session_state.any_changes_to_library = True
                         st.success(f'Book {my_bookings[0]} returned')
 
             # pasiskolinti knyga funkcionalumas
@@ -279,28 +291,29 @@ def handle_main():
                 delayed_books = [e.book for e in \
                         filter(lambda br: br.user_id == st.session_state.current_user.id and \
                                             (datetime.datetime.now() - br.created_on).days > BOOK_BORROW_MAX_DAYS, \
-                        library.booking_records)]
+                        st.session_state.library.booking_records)]
                 if len(delayed_books) > 0:
                     st.warning('Jūs turite laiku negrąžintų knygų.')
                 else:
                     if st.button('Make booking filtered books'):
 
-                        filter_books = get_books_by_filter(library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
+                        filter_books = get_books_by_filter(st.session_state.library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
 
                         if len(filter_books) > 1:
                             st.warning(f'You can borrow only 1 book at a time')
                         elif len(filter_books) == 0:
                             st.warning(f'No books in list')
                         else:
-                            s = borrow_book_from_library(library, st.session_state.current_user.id, filter_books[0], False)
+                            s = borrow_book_from_library(st.session_state.library, st.session_state.current_user.id, filter_books[0], False)
                             if s != '':
                                 st.warning(s)
                             else:
+                                st.session_state.any_changes_to_library = True
                                 st.success(f'Book {filter_books[0]} borrowed')
 
         # isvedam atfiltruotu knygu sarasa
 
-        filter_books = get_books_by_filter(library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
+        filter_books = get_books_by_filter(st.session_state.library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
 
         for book in filter_books:
             # st.write(f'{book} [balance: {library.books[book][0]}]')
@@ -323,13 +336,14 @@ def handle_main():
 
             if st.button('Delete filtered books', key='delete_filtered_books_1'):
 
-                filter_books = get_books_by_filter(library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
+                filter_books = get_books_by_filter(st.session_state.library, search_str, year_from, year_to, flag_overdued, flag_available, flag_booked)
 
                 for book in filter_books:
-                    s = delete_book_from_library(library, book)
+                    s = delete_book_from_library(st.session_state.library, book)
                     if s != '':
                         st.warning(s)
                     else:
+                        st.session_state.any_changes_to_library = True
                         st.success(f'Book {book} deleted')
 
                 st.write(f'Total: {len(filter_books)} book(s) deleted')
@@ -347,9 +361,9 @@ def handle_main():
         if st.session_state.current_role.can_delete_book(): # reikia kitokio metodo
 
             if st.button('List users'):
-                for user in library.users:
-                    st.write(f'id: {user}, role: {library.users[user][0]}, password: {library.users[user][1]}')
-                    # st.write(library.users[user])
+                for user in st.session_state.library.users:
+                    st.write(f'id: {user}, role: {st.session_state.library.users[user][0]}, password: {st.session_state.library.users[user][1]}')
+                    # st.write(st.session_state.library.users[user])
 
 
 if st.session_state.current_user is None:
@@ -364,6 +378,7 @@ else:
         st.session_state.current_user = None
         st.session_state.current_role = None
         st.write('logged off')
+        st.rerun()
 
     elif st.session_state.add_new_book_pressed == True:
 
@@ -376,12 +391,15 @@ else:
 
 # pries baigiant programa issaugom biblioteka su pakeitimais
 
-try:
+if st.session_state.any_changes_to_library:
 
-    with open(LIBRARY_FULL_FILE_NAME, 'wb') as f:
-        pickle.dump(library, f)
+    try:
 
-    print('Biblioteka išsaugota.')
+        with open(LIBRARY_FULL_FILE_NAME, 'wb') as f:
+            pickle.dump(st.session_state.library, f)
 
-except IOError as e:
-    print(e)
+        st.session_state.any_changes_to_library = False
+        print('Biblioteka išsaugota.')
+
+    except IOError as e:
+        print(e)
