@@ -15,6 +15,7 @@ class Library:
         self.users = {}
         self.books = {}
         self.booking_records = []
+        self.booking_records_history = []
         self.genres = [Poetry(), Epic(), Fiction(), Story(), Children(), Detective()]
 
 
@@ -53,6 +54,8 @@ def delete_book_from_library(library: Library, book: Book) -> str:
 
         for i, br in delete_list_booking_records:
             r = library.booking_records.pop(i)
+            r.returned_on = datetime.datetime.now()
+            library.booking_records_history.append(r)
 
         return ''
 
@@ -91,11 +94,13 @@ def borrow_book_from_library(library: Library, user_id: User, book: Book, action
             if len(already_have_booking) == 0:
                 return 'You have nothing to return'
 
-            # istrinam irasa
+            # istrinam irasa, perkeliam i istorija
 
             for i, br in enumerate(library.booking_records):
                 if br.user_id == user_id and br.book == book:
-                    library.booking_records.pop(i)
+                    r = library.booking_records.pop(i)
+                    r.returned_on = datetime.datetime.now()
+                    library.booking_records_history.append(r)
                     break
 
         else:
@@ -140,35 +145,12 @@ def get_books_by_filter(
 
         if flag_overdued:
             overdued_books = [e.book for e in filter(lambda br: (datetime.datetime.now()-br.created_on).days > BOOK_BORROW_MAX_DAYS, library.booking_records)]
-        # else:
-        #     overdued_books = filter_books_0
 
         if flag_available:
             available_books = [book for book in library.books if book_count_in_library(library, book) > 0]
-        # else:
-        #     available_books = filter_books_0
 
         if flag_booked:
             booked_books = [e.book for e in library.booking_records]
-        # else:
-        #     booked_books - filter_books_0
-
-        # if only_overdued:
-        #     if only_available:
-        #         filter_books = [item for item in filter_books_0 if item in overdued_books and item in available_books]
-        #     else:
-        #         filter_books = [item for item in filter_books_0 if item in overdued_books]
-        # else:
-        #     if only_available:
-        #         filter_books = [item for item in filter_books_0 if item in available_books]
-        #     else:
-        #         filter_books = filter_books_0
-
-        # filter_books = filter_books_0
-        # filter_books = [item for item in filter_books_0 if \
-        #     (flag_overdued and item in overdued_books) and \
-        #     (flag_available and item in available_books) and \
-        #     (flag_booked and item in booked_books)]
 
         filter_books = [item for item in filter_books_0 if \
             (not flag_overdued or item in overdued_books) and \

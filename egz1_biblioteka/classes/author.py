@@ -2,8 +2,8 @@
 class Author:
 
     def __init__(self, author_name: str) -> None:
-        self.author_name = author_name.capitalize()
-        l = self.author_name.split()
+        self.author_name = author_name
+        l = author_name.split()
         if len(l) > 0:
             self.author_short_name = f'{l[0][0]}. {l[1]}'
         else:

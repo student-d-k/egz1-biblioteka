@@ -3,6 +3,8 @@ import sys
 import datetime
 import streamlit as st
 from pathlib import Path
+import statistics
+from statistics import mode
 
 from classes.library import *
 from data.def_library import *
@@ -58,12 +60,12 @@ def handle_login():
 
     c1, c2, c3 = st.columns(3)
     with c1:
-        user_name = st.text_input('User name')
+        user_name = st.text_input('User name').lower()
     with c2:
         password = st.text_input('Password', type='password')
     with c3:
         if st.button('Login'):
-            user = next((user for user in library.users if user.id == user_name), None)
+            user = next((user for user in library.users if user.id.lower() == user_name), None)
             if user is None:
                 st.write('unknown user')
             else:
@@ -94,7 +96,7 @@ def handle_new_book():
             st.warning('Please enter a valid book title')
             return
 
-        match book_genre_str:
+        match str(book_genre_str):
             case 'Poezija':
                 book_genre = Poetry()
             case 'Epas':
@@ -158,8 +160,11 @@ def handle_main():
                         filter(lambda br: br.user_id == st.session_state.current_user.id, \
                         library.booking_records)]
                 
-                for e in my_bookings:
-                    st.write(e)
+                if len(my_bookings) == 0:
+                    st.warning('You have no bookings')
+                else:
+                    for e in my_bookings:
+                        st.write(e)
 
             # grazinti knygas funkcionalumas
 
@@ -234,7 +239,14 @@ def handle_main():
 
                 if st.button('Statistics'):
 
-                    st.write('not implemented')
+                    genre_count = Counter()
+
+                    for book in library.books.keys():
+                        genre_count[book.genre] += 1
+
+                    most_popular_genre = genre_count.most_common(1)[0]
+                    st.write(f"The most popular genre is {most_popular_genre[0]} with {most_popular_genre[1]} books.")                    
+                    # st.write(len(library.booking_records_history))
 
             # librarian functionality - list users
 

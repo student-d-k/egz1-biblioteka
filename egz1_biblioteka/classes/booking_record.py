@@ -28,6 +28,7 @@ class BookingRecord:
         self.user_id = user_id
         self.book = book
         self.created_on = datetime.datetime.now()
+        self.returned_on = None
 
     def __str__(self) -> str:
         return f'{self.id} ({self.type}) "{self.user_id}" {self.book}'
