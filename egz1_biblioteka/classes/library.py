@@ -2,9 +2,9 @@
 import os
 import pickle
 
-from classes.users import *
-from classes.book import *
-from classes.booking_record import *
+from egz1_biblioteka.classes.users import *
+from egz1_biblioteka.classes.book import *
+from egz1_biblioteka.classes.booking_record import *
 
 BOOK_BORROW_MAX_DAYS = 7 # kiek laiko galima laikyti knyga
 

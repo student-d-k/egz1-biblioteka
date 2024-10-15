@@ -1,6 +1,6 @@
 
-from classes.author import *
-from classes.genre import *
+from egz1_biblioteka.classes.author import *
+from egz1_biblioteka.classes.genre import *
 
 class Book:
 
